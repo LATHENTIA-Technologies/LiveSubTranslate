@@ -1,14 +1,18 @@
 # LiveSubTranslate
 
-**基于 Faster-Whisper 的 YouTube 中文语音实时英译字幕工具**
+**基于 Faster-Whisper 的中文电影及电视剧英语、法语实时字幕生成工具**
 
-[English](README.md) | 简体中文
+LiveSubTranslate 是一款基于 Python 的实验性本地语音翻译工具，旨在为 YouTube 上的中文电影、电视剧及其他中文视频自动生成英文或法文字幕。
 
-> **项目状态：实验性原型（Experimental Prototype）**
->
-> LiveSubTranslate 是一款基于 Python 的本地语音翻译工具，可将中文视频中的普通话语音自动翻译为英文，并通过网页界面显示字幕。
->
-> 本项目目前仍处于实验阶段。字幕可能存在延迟、遗漏、重复或翻译错误，尚不能保证与视频对白精确同步。
+用户可以自行输入 YouTube 视频链接，并根据需要选择英文（English）或法文（Français）字幕。
+
+本项目通过 macOS 虚拟音频设备 BlackHole 2ch 采集系统播放的音频，使用 Faster-Whisper 进行中文语音识别及英语翻译，并结合 NLLB-200 多语言翻译模型生成法语字幕。
+
+生成的字幕通过 Flask 网页界面自动更新，无需手动刷新。
+
+> **项目状态：实验性原型。** 当前字幕可能存在延迟、重复、遗漏或翻译错误，尚不能保证与视频对白完全同步。
+
+
 
 ## 1. 项目简介
 
