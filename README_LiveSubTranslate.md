@@ -1,10 +1,14 @@
 # LiveSubTranslate
 
-**Experimental local Chinese-to-English subtitle overlay for YouTube audio on macOS.**
+**Experimental local Chinese-to-English and Chinese-to-French subtitle overlay for YouTube videos on macOS.**
 
-LiveSubTranslate captures audio routed through a macOS virtual audio device, uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) to translate spoken Mandarin directly into English, and displays the latest result over an embedded YouTube player in a local Flask web page.
+LiveSubTranslate is an experimental Python-based application that generates English or French subtitles from spoken Mandarin in Chinese movies, TV series, and other YouTube videos.
 
-> **Status: experimental prototype.** Subtitles are delayed, may be incomplete or inaccurate, and are **not synchronized word-for-word** with the video. This is not a YouTube subtitle-track generator.
+Users can enter their own YouTube video URL, select the desired subtitle language (English or French), and display automatically generated subtitles over an embedded YouTube player.
+
+The application uses Faster-Whisper for speech recognition and direct English translation, and an additional multilingual translation model (NLLB-200) for French translation. Audio is captured locally through BlackHole 2ch on macOS.
+
+> **Status: Experimental prototype.** Subtitles may be delayed, incomplete, duplicated, or inaccurate. Real-time synchronization is not guaranteed.
 
 ## Features
 
