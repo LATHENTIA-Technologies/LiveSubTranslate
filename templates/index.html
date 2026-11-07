@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>中文电影 · 实时英文字幕</title>
+<style>
+:root{color-scheme:dark}body{font:16px -apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#101827;color:#eaf0fb;margin:0}main{max-width:1080px;margin:auto;padding:24px}h1{font-size:26px}p{color:#b9c6db;line-height:1.6}.player{position:relative;aspect-ratio:16/9;background:black;border-radius:14px;overflow:hidden}.player iframe{width:100%;height:100%;border:0}.subtitle{position:absolute;bottom:10%;left:6%;width:88%;text-align:center;pointer-events:none;font-size:clamp(18px,2.8vw,34px);font-weight:700;color:white;text-shadow:0 2px 5px #000,0 0 9px #000;line-height:1.35}.panel{background:#1d2a3d;border-radius:12px;padding:18px;margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}button,select{background:#304461;color:white;border:1px solid #506789;border-radius:8px;padding:11px;font-size:15px}button{cursor:pointer}button.primary{background:#2263cb}button:disabled{opacity:.5;cursor:not-allowed}.status{font-size:14px;color:#b9c6db}small{color:#b9c6db}
+</style></head><body><main>
+<h1>🎬 中文原声 · 实时英文字幕</h1><p>播放 YouTube 视频，使用 Mac 音频输入设备捕获声音，通过本地 Whisper 自动识别并翻译成英文。字幕通常延迟数秒；翻译结果可能不准确。</p>
+<div class="player"><iframe src="https://www.youtube.com/embed/pQGjv251_78?enablejsapi=1" title="YouTube video" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div class="subtitle" id="subtitle">English subtitles will appear here.</div></div>
+<div class="panel"><label for="device">音频输入：</label><select id="device"><option value="">正在加载...</option></select><button id="refresh">刷新设备</button><button class="primary" id="start">开始英文字幕</button><button id="stop">停止</button><span class="status" id="status">未启动</span></div>
+<p><small>注意：必须把 Mac 播放器声音路由到 BlackHole（通常通过多输出设备同时送到扬声器和 BlackHole），并在这里选择 BlackHole 2ch。若 YouTube 不允许嵌入，可另开 YouTube 页面播放，保持本网页打开以显示字幕。</small></p>
+</main><script>
+const $=id=>document.getElementById(id);let lastSeq=0;let lastText='';
+async function devices(){try{let a=await (await fetch('/api/devices')).json();$('device').innerHTML=a.map(x=>`<option value="${x.id}">${x.name.replaceAll('<','&lt;')}</option>`).join('');let bh=a.find(x=>x.name.toLowerCase().includes('blackhole'));if(bh)$('device').value=bh.id;}catch(e){$('status').textContent=e.message}}
+$('refresh').onclick=devices;
+$('start').onclick=async()=>{let d=$('device').value;if(!d){alert('请先选择 BlackHole 2ch 输入设备');return}let r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:Number(d)})});let j=await r.json();if(!j.ok)alert(j.error);};
+$('stop').onclick=()=>fetch('/api/stop',{method:'POST'});
+setInterval(async()=>{try{let s=await(await fetch('/api/status')).json();$('status').textContent=s.error?'错误：'+s.error:(s.running?'正在识别 · '+s.device:'已停止');if(s.latest&&s.latest.seq!==lastSeq){lastSeq=s.latest.seq;lastText=s.latest.text;$('subtitle').textContent=lastText;} }catch(e){$('status').textContent='连接中断';}},1000);
+devices();
+</script></body></html>
