@@ -10,8 +10,9 @@ body{font:16px -apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#101
 main{max-width:1080px;margin:auto;padding:24px}h1{font-size:26px}
 p{color:#b9c6db;line-height:1.6}
 .player{position:relative;aspect-ratio:16/9;background:#050910;border-radius:14px;overflow:hidden}
-.player iframe{width:100%;height:100%;border:0}
-.placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#b9c6db;box-sizing:border-box}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+[hidden]{display:none!important}
+.placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#b9c6db;box-sizing:border-box;pointer-events:none}
 .subtitle{position:absolute;bottom:10%;left:6%;width:88%;text-align:center;pointer-events:none;font-size:clamp(18px,2.8vw,34px);font-weight:700;color:white;text-shadow:0 2px 5px #000,0 0 9px #000;line-height:1.35}
 .panel{background:#1d2a3d;border-radius:12px;padding:18px;margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 button,select,input{background:#304461;color:white;border:1px solid #506789;border-radius:8px;padding:11px;font-size:15px;box-sizing:border-box}
@@ -20,7 +21,7 @@ input{flex:1;min-width:220px}button{cursor:pointer}button.primary{background:#22
 </style>
 </head>
 <body><main>
-<h1>🎬 LiveSubTranslate · 中文影视 · 英语 / 法语字幕</h1>
+<h1> LiveSubTranslate · 中文影视 · 英语 / 法语字幕</h1>
 <p>输入你想观看的 YouTube 视频链接，通过 Mac 音频输入设备捕获声音，并生成英文字幕。法语字幕需要后端额外接入中法翻译模型；字幕可能延迟或不准确。</p>
 <form class="panel" id="videoForm">
 <label for="videoUrl">YouTube 视频链接：</label>
@@ -35,14 +36,14 @@ input{flex:1;min-width:220px}button{cursor:pointer}button.primary{background:#22
 </div>
 <div class="panel">
 <label for="language">字幕语言：</label>
-<select id="language"><option value="en">🇬🇧 English · 英语</option><option value="fr">🇫🇷 Français · 法语（需后端支持）</option></select>
+<select id="language"><option value="en"> English · 英语</option><option value="fr"> Français · 法语</option></select>
 <label for="device">音频输入：</label>
 <select id="device"><option value="">正在加载...</option></select>
 <button id="refresh" type="button">刷新设备</button>
 <button class="primary" id="start" type="button">开始字幕</button>
 <button id="stop" type="button">停止</button>
 <span class="status" id="status" role="status">未启动</span>
-<span class="status" id="languageNote" role="status">英文：使用现有 Whisper 翻译后端。</span>
+<span class="status" id="languageNote" role="status">英语：Whisper 直接翻译；法语：中文转写后本地翻译。</span>
 </div>
 <p><small>注意：必须将 Mac 的声音输出路由到包含 BlackHole 2ch 的多输出设备，并在此选择 BlackHole 2ch 作为输入。当前 Python 后端仅能输出英文；选择法语前需完成后端升级。部分 YouTube 视频禁止嵌入；遇到这种情况，可以在另一个标签页播放视频，但字幕仍只显示在本地网页中。请仅处理你有权使用的音频。</small></p>
 </main>
@@ -53,8 +54,8 @@ const subtitlePlaceholder = () => $('language').value === 'fr' ? 'Les sous-titre
 $('language').addEventListener('change', () => {
   $('subtitle').textContent = subtitlePlaceholder();
   $('languageNote').textContent = $('language').value === 'fr'
-    ? '法语需要更新 app.py / app_fast.py：当前后端仅生成英文。'
-    : '英文：使用现有 Whisper 翻译后端。';
+    ? '法语：Whisper 中文转写 + 本地中法翻译模型（首次需要下载）。'
+    : '英语：Whisper 直接翻译；法语：中文转写后本地翻译。';
 });
 
 function getYouTubeId(raw) {
@@ -80,7 +81,7 @@ $('videoForm').addEventListener('submit', event => {
     $('videoStatus').textContent = '链接无效，请粘贴完整的 YouTube 视频地址。';
     return;
   }
-  $('youtubePlayer').src = `https://www.youtube.com/embed/${encodeURIComponent(id)}?enablejsapi=1`;
+  $('youtubePlayer').src = `https://www.youtube.com/embed/${encodeURIComponent(id)}`;
   $('youtubePlayer').hidden = false;
   $('placeholder').hidden = true;
   $('subtitle').textContent = subtitlePlaceholder();
@@ -108,10 +109,6 @@ async function devices() {
 $('refresh').onclick = devices;
 $('start').onclick = async () => {
   const lang = $('language').value;
-  if (lang === 'fr') {
-    alert('当前 app.py / app_fast.py 仅支持英文翻译。法语字幕需要修改 Python 后端并安装中法翻译模型，不能只靠 index.html 实现。');
-    return;
-  }
   const d = $('device').value;
   if (d === '') { alert('请先选择 BlackHole 2ch 等音频输入设备'); return; }
   try {
@@ -121,6 +118,7 @@ $('start').onclick = async () => {
     });
     const result = await response.json();
     if (!response.ok || !result.ok) alert(result.error || '启动失败');
+    else { lastSeq = 0; $('subtitle').textContent = subtitlePlaceholder(); }
   } catch (e) { $('status').textContent = '启动失败：' + e.message; }
 };
 $('stop').onclick = async () => {
